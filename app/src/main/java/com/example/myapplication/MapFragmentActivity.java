@@ -27,6 +27,7 @@ import com.naver.maps.map.overlay.LocationOverlay;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
 import com.naver.maps.map.util.FusedLocationSource;
+import com.naver.maps.map.widget.ZoomControlView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,30 +64,54 @@ public class MapFragmentActivity extends FragmentActivity
 
         // ...
         //ui 추가
-        //UiSettings uiSettings = naverMap.getUiSettings();
-        //uiSettings.setCompassEnabled(true);
+        UiSettings uiSettings = naverMap.getUiSettings();
+        uiSettings.setCompassEnabled(true);
+//        uiSettings.setZoomControlEnabled(false);
+        uiSettings.setLocationButtonEnabled(true);
+
         //위치 오버레이 표시
         LocationOverlay locationOverlay = naverMap.getLocationOverlay();
         locationOverlay.setVisible(true);
         //사용자 위치 변경(서울시청)
         //locationOverlay.setPosition(new LatLng(37.5670135, 126.9783740));
         //매물 정보(예 : 부산 시청)
-        double lati = 35.1798159;
-        double logi = 129.0750222;
-        double[] la = {35.17912, 35.1798};
-        double[] lo = {129.0745, 129.07664};
-        String[] name = {"부산 경찰청", "시청역"};
-        String apt_name = "부산광역시청";
-        int apt_price = 101;
-        //정보창 만들기
-        InfoWindow infoWindow = new InfoWindow();
-        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(this) {
-            @NonNull
-            @Override
-            public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                return "매물 이름 : " + apt_name + "\n가격 : "+apt_price+"억";
-            }
-        });
+        double[] lati = {35.1798159,35.17912, 35.1798};
+        double[] logi = {129.0750222,129.0745, 129.07664};
+        String[] name = {"부산광역시청","부산 경찰청", "시청역"};
+        int[] price = {100,70,50};
+        int Mnum=3; //마커 개수
+
+
+        //마커들 만들기
+        InfoWindow[] infoWindows = new InfoWindow[Mnum];
+        Marker[] markers=new Marker[Mnum];
+        for(int i=0; i<Mnum; i++){
+            int finalI = i;
+            markers[i]=new Marker();
+            markers[i].setPosition(new LatLng(lati[i], logi[i]));
+            markers[i].setCaptionText(name[i]);
+            markers[i].setCaptionAligns(Align.Center);
+            markers[i].setMap(naverMap);
+
+            infoWindows[i]=new InfoWindow();//개별 정보창 추가
+            infoWindows[i].setAdapter(new InfoWindow.DefaultTextAdapter(this) {
+                @NonNull
+                @Override
+                public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                    return "매물 이름 : " + name[finalI] + "\n가격 : "+price[finalI]+"억";
+                }
+            });
+
+            markers[i].setOnClickListener(overlay -> {//마커 클릭시 정보창 표시/감춤
+                if(markers[finalI].getInfoWindow()==null){
+                    infoWindows[finalI].open(markers[finalI]);
+                }
+                else infoWindows[finalI].close();
+                return true;
+            });
+        }
+
+
 
         //롱클릭 시 좌표 토스트
         naverMap.setOnMapLongClickListener((point, coord) ->
@@ -110,24 +135,10 @@ public class MapFragmentActivity extends FragmentActivity
 //                }
 //            });
 //        });
-        int Mnum=2;
 
-        Marker[] markers=new Marker[Mnum];
-        for(int i=0; i<Mnum; i++){
-            markers[i]=new Marker();
-            markers[i].setPosition(new LatLng(la[i], lo[i]));
-            markers[i].setCaptionText(name[i]);
-            markers[i].setCaptionAligns(Align.Center);
-            markers[i].setMap(naverMap);
-        }
 
-        // 마커 만들기
-        Marker marker = new Marker(); //마커 생성
-        marker.setPosition(new LatLng(lati, logi)); //좌표 설정
-        marker.setCaptionText(apt_name); //마커 이름 설정
-        marker.setCaptionAligns(Align.Center); //이름 위치 설정
-        marker.setMap(naverMap);
-        infoWindow.open(marker);
+
+
     }
     //마커 여러개 만들기 위한 executor
 //    public interface Executor{
